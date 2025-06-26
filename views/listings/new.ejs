@@ -1,0 +1,42 @@
+<% layout('layout') %>
+
+<div class="form-container">
+  <h2>Add a New Listing</h2>
+  <form action="/listings" method="POST" class="listing-form">
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input type="text" name="title" id="title" required />
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea name="description" id="description" required></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="image">Image URL</label>
+      <input type="url" name="image[url]" id="image" required />
+    </div>
+
+    <div class="form-group">
+      <label for="price">Price (in ₹)</label>
+      <input type="number" name="price" id="price" required min="0" />
+    </div>
+
+    <div class="form-group">
+      <label for="location">Location</label>
+      <input type="text" name="location" id="location" required />
+    </div>
+
+    <div class="form-group">
+      <label for="country">Country</label>
+      <input type="text" name="country" id="country" required />
+    </div>
+
+    <button class="form-btn" type="submit">Add Listing</button>
+  </form>
+
+  <div class="back-link">
+    <a href="/listings">← Back to Listings</a>
+  </div>
+</div>

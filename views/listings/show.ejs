@@ -1,18 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title><%= listing.title %></title>
-  <link rel="stylesheet" href="/style.css">
-</head>
-<body>
-  <div class="listing-detail">
-    <h1><%= listing.title %></h1>
-    <img src="<%= listing.image.url %>" alt="Listing Image" />
-    <p><strong>Location:</strong> <%= listing.location %>, <%= listing.country %></p>
-    <p><strong>Price:</strong> $<%= listing.price %> / night</p>
-    <p><strong>Description:</strong> <%= listing.description %></p>
-    <a href="/listings">⬅ Back to all listings</a>
+<% layout('layout') %>
+
+<div class="listing-detail">
+  <h1><%= listing.title %></h1>
+  <img src="<%= listing.image.url %>" alt="Listing Image" />
+  <p>
+    <strong>Location:</strong> <%= listing.location %>, <%= listing.country %>
+  </p>
+  <p class="price">&#8377; <%= listing.price.toLocaleString('en-IN') %></p>
+  <p><strong>Description:</strong> <%= listing.description %></p>
+
+  <div class="action-buttons">
+    <form action="/listings/<%= listing._id %>?_method=DELETE" method="POST">
+      <button class="btn btn-danger">Delete</button>
+    </form>
+    <a href="/listings/<%= listing._id %>/edit" class="edbtn">Edit</a>
   </div>
-</body>
-</html>
+
+  <a href="/listings" class="back-link">⬅ Back to all listings</a>
+</div>
