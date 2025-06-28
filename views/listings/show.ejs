@@ -15,6 +15,67 @@
     </form>
     <a href="/listings/<%= listing._id %>/edit" class="edbtn">Edit</a>
   </div>
+  <br />
+  <hr />
+  <br />
+  <form action="/listings/<%= listing._id %>/reviews" method="POST">
+    <div class="mb-3">
+      <label for="rating" class="form-label">Rating: </label>
+      <input
+        type="range"
+        name="review[rating]"
+        id="rating"
+        min="1"
+        max="5"
+        step="1"
+        class="form-range"
+      />
+    </div>
+
+    <div class="mb-3">
+      <label for="comment" class="form-label">Comment:</label>
+      <textarea
+        name="review[comment]"
+        id="comment"
+        cols="30"
+        rows="5"
+        required
+        class="form-control"
+      ></textarea>
+    </div>
+
+    <button class="btn btn-outline-dark">Add Review</button>
+  </form>
+
+  <br />
+  <hr />
+  <br />
+  <p><b>All Reviews</b></p>
+
+  <div class="row">
+    <% for (let review of listing.reviews) { %>
+    <div class="col-md-4 mb-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Anonymous</h5>
+          <p class="card-text"><%= review.comment %></p>
+          <p class="card-text">
+            <strong>Rating:</strong>
+            <%= "⭐".repeat(review.rating) %> (<%= review.rating %>/5)
+          </p>
+
+          <form
+            method="POST"
+            action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE"
+            onsubmit="return confirm('Are you sure?');"
+          >
+            <button class="btn btn-sm btn-danger mt-2">Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <% } %>
+  </div>
 
   <a href="/listings" class="back-link">⬅ Back to all listings</a>
 </div>

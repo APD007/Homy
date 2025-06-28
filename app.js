@@ -4,9 +4,13 @@ import ejsMate from "ejs-mate";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import { Listing } from "./models/listing.js";
+import { Review } from "./models/review.js";
 import { sampleListings } from "./init/data.js"; 
 import methodOverride from "method-override";
-
+import wrapAsync from "./utils/wrapAsync.js";
+import ExpressError from "./utils/ExpressError.js";
+import validateListing from "./middleware/validateListing.js";
+import validateReview from "./middleware/validateReview.js";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -36,93 +40,127 @@ async function connectDB() {
     process.exit(1);
   }
 }
-
-app.get("/", async (req, res) => {
+// Routes
+app.get("/", (req, res) => {
   res.render("working");
 });
 
-//INDEX ROUTE
-app.get("/listings", async (req, res) => {
-    try {
-        const listings = await Listing.find({});
-        res.render("listings/index", { listings }); 
-    } catch (err) {
-        console.error("Error fetching listings:", err);
-        res.status(500).send("Something went wrong!");
-    }
-});
+// INDEX - Show all listings
+app.get(
+  "/listings",
+  wrapAsync(async (req, res) => {
+    const listings = await Listing.find({});
+    res.render("listings/index", { listings });
+  })
+);
 
-//NEW ROUTE
+// NEW - Show form
 app.get("/listings/new", (req, res) => {
   res.render("listings/new");
 });
 
-
-app.get("/listings/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const listing = await Listing.findById(id);
-        if (!listing) {
-            return res.status(404).send("Listing not found");
-        }
-        res.render("listings/show", { listing });
-    } catch (err) {
-        console.error("Error fetching listing:", err);
-        res.status(500).send("Something went wrong!");
+// SHOW - Show one listing
+app.get(
+  "/listings/:id",
+  wrapAsync(async (req, res, next) => {
+    const { id } = req.params;
+    const listing = await Listing.findById(id).populate("reviews");
+    if (!listing) {
+      throw new ExpressError("Listing not found", 404);
     }
-});
+    res.render("listings/show", { listing });
+  })
+);
 
-app.post("/listings", async (req, res) => {
-  try {
-    const listing = new Listing(req.body.listing); 
+// CREATE - Create new listing
+
+
+app.post(
+  "/listings",
+  validateListing,
+  wrapAsync(async (req, res) => {
+    const listing = new Listing(req.body.listing);
     await listing.save();
     res.redirect("/listings");
-  } catch (err) {
-    console.error("Failed to create listing:", err);
-    res.status(500).send("Error creating listing.");
-  }
-});
+  })
+);
 
 
-//EDIT ROUTE
-app.get("/listings/:id/edit", async (req, res) => {
-  try {
+// EDIT - Show edit form
+app.get(
+  "/listings/:id/edit",validateListing,
+  wrapAsync(async (req, res, next) => {
     const { id } = req.params;
     const listing = await Listing.findById(id);
+    if (!listing) {
+      throw new ExpressError("Listing not found", 404);
+    }
     res.render("listings/edit", { listing });
-  } catch (err) {
-    console.error("Error loading edit form:", err);
-    res.status(500).send("Error loading edit form");
-  }
-});
+  })
+);
 
-app.put("/listings/:id", async (req, res) => {
-  try {
+// UPDATE - Update listing
+app.put(
+  "/listings/:id",validateListing,
+  wrapAsync(async (req, res, next) => {
     const { id } = req.params;
-    const updatedListing = await Listing.findByIdAndUpdate(id, req.body, {
+    const updatedListing = await Listing.findByIdAndUpdate(id, req.body.listing, {
       new: true,
       runValidators: true,
     });
     res.redirect(`/listings/${updatedListing._id}`);
-  } catch (err) {
-    console.error("Error updating listing:", err);
-    res.status(500).send("Update failed");
-  }
-});
+  })
+);
 
-// DELETE route
-app.delete("/listings/:id", async (req, res) => {
-  try {
+// DELETE - Delete listing
+app.delete(
+  "/listings/:id",
+  wrapAsync(async (req, res, next) => {
     await Listing.findByIdAndDelete(req.params.id);
     res.redirect("/listings");
-  } catch (err) {
-    console.error("❌ Error deleting listing:", err);
-    res.status(500).send("Something went wrong!");
-  }
+  })
+);
+
+//post route
+app.post(
+  "/listings/:id/reviews",
+  validateReview,
+  wrapAsync(async (req, res) => {
+    const { id } = req.params;
+    const listing = await Listing.findById(id);
+    console.log(req.body);
+    const review = new Review(req.body.review);
+    listing.reviews.push(review);
+    await review.save();
+    await listing.save();
+    res.redirect(`/listings/${listing._id}`);
+  })
+);
+
+app.delete(
+  "/listings/:id/reviews/:reviewId",
+  wrapAsync(async (req, res) => {
+    const { id, reviewId } = req.params;
+    await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
+    await Review.findByIdAndDelete(reviewId);
+    res.redirect(`/listings/${id}`);
+  })
+);
+
+// Catch-all 404 handler
+app.use((req, res, next) => {
+  next(new ExpressError("Page Not Found", 404));
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  const { statusCode = 500 } = err;
+  if (!err.message) err.message = "Something went wrong!";
+  res.status(statusCode).render("error", { err });
 });
 
 
-
+// Start server
 connectDB().then(() => {
   app.listen(port, () => {
     console.log(`🚀 Server running at http://localhost:${port}`);
