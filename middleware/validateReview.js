@@ -1,5 +1,8 @@
 import reviewSchema from "../utils/validateReview.js";
 import ExpressError from "../utils/ExpressError.js";
+import { Listing } from "../models/listing.js";
+import { Review } from "../models/review.js";
+
 
 const validateReview = (req, res, next) => {
   const { error } = reviewSchema.validate(req.body);
