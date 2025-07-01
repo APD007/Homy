@@ -5,6 +5,7 @@
   <form
     action="/listings/<%= listing._id %>?_method=PUT"
     method="POST"
+    enctype="multipart/form-data"
     class="listing-form"
   >
     <div class="form-group">
@@ -20,20 +21,24 @@
 
     <div class="form-group">
       <label for="description">Description</label>
-      <textarea id="description" name="listing[description]" rows="4" required>
-<%= listing.description %></textarea
-      >
+      <textarea id="description" name="listing[description]" rows="4" required><%= listing.description %></textarea>
     </div>
 
     <div class="form-group">
-      <label for="image">Image URL</label>
+      <label for="image">Current Image:</label><br />
+      <img src="<%= originalImageUrl %>" alt="Current Image" width="200" class="mb-2"/>
+    </div>
+
+    <div class="form-group">
+      <label for="image">Upload New Image (optional):</label>
       <input
-        type="text"
+        type="file"
         id="image"
-        name="listing[image][url]"
-        value="<%= listing.image.url %>"
-        required
+        name="image"
+        accept="image/*"
+        class="form-control"
       />
+      <small class="form-text text-muted">Leave blank to keep current image</small>
     </div>
 
     <div class="form-group">

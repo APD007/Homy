@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+const dbUrl = process.env.ATLASDB_URL;
 import express from "express";
 import path from "path";
 import ejsMate from "ejs-mate";
@@ -11,11 +14,11 @@ import listingRoutes from "./routes/listings.js";
 import reviewRoutes from "./routes/reviews.js";
 import userRoutes from "./routes/users.js";
 import session from "express-session";
+import MongoStore from "connect-mongo";
 import flash from "connect-flash";
 import passport from "passport";
 import LocalStrategy from "passport-local";
 import { User } from "./models/user.js";
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,16 +36,26 @@ app.use(methodOverride("_method"));
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
+
 const sessionOptions = {
-  secret: "yourSuperSecretKey", 
-  resave: false,
-  saveUninitialized: true,
+  store: MongoStore.create({
+    mongoUrl: dbUrl,
+    crypto: {
+      secret: process.env.SECRET, 
+    },
+    touchAfter: 24 * 3600,
+  }),
+  secret: process.env.SECRET,
+  resave: false, 
+  saveUninitialized: true, 
   cookie: {
     httpOnly: true,
-    expires : Date.now() + 1000 * 60 * 60 * 24 * 7,
-    maxAge: 1000 * 60 * 60 * 24 * 7, 
+    expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+    maxAge: 1000 * 60 * 60 * 24 * 7,
   },
 };
+
+
 
 app.use(session(sessionOptions));
 app.use(flash());
@@ -50,7 +63,7 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.use(new LocalStrategy(User.authenticate())); 
+passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
@@ -63,14 +76,13 @@ app.use((req, res, next) => {
 
 async function connectDB() {
   try {
-    await mongoose.connect("mongodb://127.0.0.1:27017/homy");
+    await mongoose.connect(dbUrl);
     console.log("✅ MongoDB connected");
   } catch (err) {
     console.error("❌ MongoDB connection failed:", err);
     process.exit(1);
   }
 }
-
 
 app.get(
   "/",
@@ -79,7 +91,6 @@ app.get(
     res.render("listings/index", { listings });
   })
 );
-
 
 app.use("/listings", listingRoutes);
 app.use("/listings/:id/reviews", reviewRoutes);
