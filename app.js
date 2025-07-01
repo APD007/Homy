@@ -9,8 +9,13 @@ import wrapAsync from "./utils/wrapAsync.js";
 import ExpressError from "./utils/ExpressError.js";
 import listingRoutes from "./routes/listings.js";
 import reviewRoutes from "./routes/reviews.js";
+import userRoutes from "./routes/users.js";
 import session from "express-session";
 import flash from "connect-flash";
+import passport from "passport";
+import LocalStrategy from "passport-local";
+import { User } from "./models/user.js";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,13 +47,19 @@ const sessionOptions = {
 app.use(session(sessionOptions));
 app.use(flash());
 
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new LocalStrategy(User.authenticate())); 
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 app.use((req, res, next) => {
+  res.locals.currentUser = req.user;
   res.locals.success = req.flash("success");
-  res.locals.error = req.flash("error"); 
+  res.locals.error = req.flash("error");
   next();
 });
-
 
 async function connectDB() {
   try {
@@ -72,6 +83,7 @@ app.get(
 
 app.use("/listings", listingRoutes);
 app.use("/listings/:id/reviews", reviewRoutes);
+app.use("/", userRoutes);
 
 app.use((req, res, next) => {
   next(new ExpressError("Page Not Found", 404));

@@ -3,21 +3,36 @@
 <div class="listing-detail">
   <h1><%= listing.title %></h1>
   <img src="<%= listing.image.url %>" alt="Listing Image" />
+  <p><strong>Description:</strong> <%= listing.description %></p>
+  <p class="price">&#8377; <%= listing.price.toLocaleString('en-IN') %></p>
   <p>
     <strong>Location:</strong> <%= listing.location %>, <%= listing.country %>
   </p>
-  <p class="price">&#8377; <%= listing.price.toLocaleString('en-IN') %></p>
-  <p><strong>Description:</strong> <%= listing.description %></p>
 
-  <div class="action-buttons">
-    <form action="/listings/<%= listing._id %>?_method=DELETE" method="POST">
-      <button class="btn btn-danger">Delete</button>
-    </form>
+  <p class="text-muted mt-2">
+    <i class="fa-solid fa-user"></i> Owned by:
+    <strong><%= listing.owner.username %></strong>
+  </p>
+  <% if (currentUser && currentUser._id.toString() ===
+  listing.owner._id.toString()) { %>
+  <div class="action-buttons mt-3">
     <a href="/listings/<%= listing._id %>/edit" class="edbtn">Edit</a>
+    <form
+      action="/listings/<%= listing._id %>?_method=DELETE"
+      method="POST"
+      class="d-inline"
+      onsubmit="return confirm('Are you sure you want to delete this listing?');"
+    >
+      <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
   </div>
+  <% } %>
+
   <br />
   <hr />
   <br />
+
+  <% if(currentUser) { %>
   <form action="/listings/<%= listing._id %>/reviews" method="POST">
     <div class="mb-3">
       <label for="rating" class="form-label">Rating: </label>
@@ -50,27 +65,35 @@
   <br />
   <hr />
   <br />
-  <p><b>All Reviews</b></p>
+  <% } %>
 
+  <p><b>All Reviews</b></p>
   <div class="row">
     <% for (let review of listing.reviews) { %>
     <div class="col-md-4 mb-3">
       <div class="card shadow-sm">
         <div class="card-body">
-          <h5 class="card-title">Anonymous</h5>
           <p class="card-text"><%= review.comment %></p>
           <p class="card-text">
             <strong>Rating:</strong>
             <%= "⭐".repeat(review.rating) %> (<%= review.rating %>/5)
           </p>
-
+          <% if (review.author) { %>
+          <small class="text-muted"
+            >by <em><%= review.author.username %></em></small
+          >
+          <% } else { %>
+          <small class="text-muted">by <em>Anonymous</em></small>
+          <% } %> <% if (currentUser && review.author &&
+          currentUser._id.toString() === review.author._id.toString()) { %>
           <form
             method="POST"
             action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE"
-            onsubmit="return confirm('Are you sure?');"
+            onsubmit="return confirm('Are you sure you want to delete this review?');"
           >
             <button class="btn btn-sm btn-danger mt-2">Delete</button>
           </form>
+          <% } %>
         </div>
       </div>
     </div>

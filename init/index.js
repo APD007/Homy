@@ -1,7 +1,7 @@
 // index.js
 import mongoose from "mongoose";
 import { Listing } from "../models/listing.js";
-import { sampleListings } from "./data.js"; 
+import { sampleListings } from "./data.js";
 
 async function connectDB() {
   try {
@@ -16,7 +16,11 @@ async function connectDB() {
 const initDB = async () => {
   try {
     await Listing.deleteMany({});
-    await Listing.insertMany(sampleListings);
+    const ownerId = "6863e1d66e105f26cc1c58a5";
+    const listingsWithOwner = sampleListings.map((listing) => {
+      return { ...listing, owner: ownerId };
+    });
+    await Listing.insertMany(listingsWithOwner);
     console.log("✅ Sample listings initialized");
     process.exit(0);
   } catch (err) {
