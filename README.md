@@ -6,7 +6,7 @@ An Airbnb-style full-stack web application for creating, viewing, editing, and d
 
 ## 🚀 Live Demo
 
-[Your Deployed Site Link Here](https://homy-11lv.onrender.com)
+[Homy](https://homy-11lv.onrender.com)
 
 ---
 
@@ -117,7 +117,7 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 ### Database Seeding
 
-(Optional) Seed the database with sample listings:
+Seed the database with sample listings:
 
 ```bash
 node init/seed.js
